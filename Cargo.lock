@@ -7094,6 +7094,7 @@ dependencies = [
  "clap",
  "eyre",
  "jsonrpsee",
+ "parking_lot 0.12.3",
  "reth",
  "reth-consensus-debug-client",
  "reth-engine-tree",
@@ -7102,6 +7103,7 @@ dependencies = [
  "reth-rpc-layer",
  "reth-stages-types",
  "reth-tracing",
+ "serde",
  "tokio",
 ]
 
