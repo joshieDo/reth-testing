@@ -1,0 +1,27 @@
+[package]
+name = "reth-tester"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[dependencies]
+reth = { git = "https://github.com/paradigmxyz/reth", rev = "237d136" }
+reth-exex = { git = "https://github.com/paradigmxyz/reth", rev = "237d136" }
+reth-engine-tree = { git = "https://github.com/paradigmxyz/reth", rev = "237d136" }
+reth-consensus-debug-client = { git = "https://github.com/paradigmxyz/reth", rev = "237d136" }
+reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", rev = "237d136" }
+reth-tracing = { git = "https://github.com/paradigmxyz/reth", rev = "237d136" }
+reth-rpc-layer = { git = "https://github.com/paradigmxyz/reth", rev = "237d136" }
+reth-stages-types = { git = "https://github.com/paradigmxyz/reth", rev = "237d136" }
+
+clap = "4"
+eyre = "0.6"
+tokio = { version = "1.39", default-features = false }
+jsonrpsee = "0.24"
+
+[profile.maxperf]
+inherits = "release"
+lto = "fat"
+codegen-units = 1
+
+

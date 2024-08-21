@@ -12,4 +12,6 @@ Testing ExEx:
 
 Uses ExEx & etherscan to move the chain forward **until** it has collected a specific number of blocks. It defaults to the default persistence threshold if no argument is passed.
 
-Main goal is to be able to have a node fill its in-memory chain, and be able to query it without it moving forward.
+**Requires ETHERSCAN_API_KEY to be set as an environment variable.**
+
+Main goal is to have a node fill its in-memory chain and stop, so we can query it without moving forward.
