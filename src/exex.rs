@@ -24,13 +24,14 @@ pub async fn exex<Node: FullNodeComponents>(
     let finalized = ctx.provider().finalized_block_num_hash()?.unwrap_or_default();
     let etherscan = etherscan_provider(&ctx, etherscan)?;
     let initial_height = ctx.provider().last_block_number()?;
-
+    
     let mut local_tip = initial_height;
     let mut etherscan_tip =
         etherscan.load_block(BlockNumberOrTag::Latest).await?.header.number.unwrap_or_default();
+    
+    rpc_status.write().initial_height = initial_height;
 
     info!(local_tip, etherscan_tip, ?finalized, "Starting exex.");
-
     loop {
         // StageId::Bodies gets updated on each flush to disk
         let storage_tip =
