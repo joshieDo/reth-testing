@@ -51,10 +51,13 @@ pub async fn exex<Node: FullNodeComponents>(
                 local_tip, storage_tip, initial_height, "Stopped moving chain forward"
             );
 
-            // Updates the `tester/status`
+            // Updates the `tester/status` with ready
             rpc_status.write().ready = true;
 
-            return Ok(())
+            // Exiting would crash the node, so we sleep forever instead.
+            loop { 
+                tokio::time::sleep(std::time::Duration::from_secs(500)).await
+            }
         }
 
         // Query the next block
