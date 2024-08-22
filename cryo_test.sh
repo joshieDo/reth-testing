@@ -51,7 +51,7 @@ if [ "$#" -eq 0 ]; then
         exit 1
     fi
     BLOCK_START=$(($(echo $status | jq -r '.result.in_memory_first') - 2))
-    BLOCK_END=$(echo $status | jq -r '.result.tip')
+    BLOCK_END=$(($(echo $status | jq -r '.result.tip') + 1))
 else
     BLOCK_START=$1
     BLOCK_END=$2

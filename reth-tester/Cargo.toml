@@ -5,14 +5,14 @@ publish = false
 edition = "2021"
 
 [dependencies]
-reth = { git = "https://github.com/paradigmxyz/reth", rev = "237d136" }
-reth-consensus-debug-client = { git = "https://github.com/paradigmxyz/reth", rev = "237d136" }
-reth-exex = { git = "https://github.com/paradigmxyz/reth", rev = "237d136" }
-reth-engine-tree = { git = "https://github.com/paradigmxyz/reth", rev = "237d136" }
-reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", rev = "237d136" }
-reth-rpc-layer = { git = "https://github.com/paradigmxyz/reth", rev = "237d136" }
-reth-stages-types = { git = "https://github.com/paradigmxyz/reth", rev = "237d136" }
-reth-tracing = { git = "https://github.com/paradigmxyz/reth", rev = "237d136" }
+reth = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
+reth-consensus-debug-client = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
+reth-exex = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
+reth-engine-tree = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
+reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
+reth-rpc-layer = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
+reth-stages-types = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
+reth-tracing = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
 
 clap = "4"
 eyre = "0.6"
