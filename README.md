@@ -1,7 +1,7 @@
 # Testing utilities
 
 ### `reth-tester`
-Reth node that uses ExEx & Etherscan to fill the in-memory chain and stopping.
+Reth node that uses ExEx & Etherscan to fill the in-memory chain and stop.
 
 ### `cryo_test.sh`
 Runs cryo commands on two nodes to check correctness and compare timings.
