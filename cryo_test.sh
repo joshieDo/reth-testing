@@ -12,7 +12,7 @@
 
 # Define node URLs and types. First node should be the in-memory one if applicable
 NODES=("http://localhost:8545" "http://localhost:8544")
-CRYO_TYPES=("logs" "blocks" "txs")
+CRYO_TYPES=("logs" "blocks" "txs" "traces" "geth_calls" "slot_diffs")
 
 set -e # exit if a command fails
 
