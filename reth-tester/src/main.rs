@@ -5,13 +5,11 @@ use reth_engine_tree::tree::TreeConfig;
 use reth_node_ethereum::{node::EthereumAddOns, EthereumNode};
 
 mod equality;
-
 mod exex;
 use exex::exex;
-
 mod engine;
 mod etherscan;
-
+mod macros;
 mod rpc;
 use rpc::{TesterExt, TesterExtApiServer};
 
