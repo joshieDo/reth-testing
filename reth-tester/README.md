@@ -3,10 +3,15 @@
 $ reth node --help
 (...)
 Testing ExEx:
+      --etherscan-url <ETHERSCAN_API_URL>
+
       --num-blocks <NUM_BLOCKS>
+          Uses etherscan to sync up to `num_blocks`. **Should not** be used with a CL
+
           [default: 3]
 
-      --etherscan-url <ETHERSCAN_API_URL>
+      --against-rpc <AGAINST_RPC>
+          Runs equality tests across many RPCs calls after syncing `num_blocks`
 (...)     
 ```
 

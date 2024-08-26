@@ -4,6 +4,8 @@ use reth::{builder::EngineNodeLauncher, cli::Cli, providers::providers::Blockcha
 use reth_engine_tree::tree::TreeConfig;
 use reth_node_ethereum::{node::EthereumAddOns, EthereumNode};
 
+mod equality;
+
 mod exex;
 use exex::exex;
 
@@ -20,10 +22,14 @@ fn default_persistence() -> u64 {
 #[derive(Debug, clap::Parser)]
 #[command(next_help_heading = "Testing ExEx")]
 pub struct TestArgs {
-    #[arg(long, default_value_t = default_persistence())]
-    pub num_blocks: u64,
     #[arg(long, value_name = "ETHERSCAN_API_URL")]
     pub etherscan_url: Option<String>,
+    /// Uses etherscan to sync up to `num_blocks`. **Should not** be used with a CL.
+    #[arg(long, default_value_t = default_persistence())]
+    pub num_blocks: u64,
+    /// Runs equality tests across many RPCs calls after syncing `num_blocks`.
+    #[arg(long)]
+    pub against_rpc: Option<String>,
 }
 
 fn main() {
@@ -43,17 +49,11 @@ fn main() {
                     Ok(())
                 })
                 .on_rpc_started(|_ctx, handles| {
-                    let _ = engine_api_handle_tx.send(handles.auth.clone());
+                    let _ = engine_api_handle_tx.send((handles.auth.clone(), handles.rpc.clone()));
                     Ok(())
                 })
                 .install_exex("tester", move |ctx| async move {
-                    Ok(exex(
-                        ctx,
-                        engine_api_handle_rx,
-                        rpc_status,
-                        args.etherscan_url,
-                        args.num_blocks,
-                    ))
+                    Ok(exex(ctx, engine_api_handle_rx, rpc_status, args))
                 })
                 .launch_with_fn(|builder| {
                     let launcher = EngineNodeLauncher::new(

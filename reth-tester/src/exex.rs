@@ -1,10 +1,13 @@
-use crate::{engine::advance_chain, etherscan::etherscan_provider, rpc::TesterStatus};
+use crate::{
+    engine::advance_chain, equality::test_rpc_equality, etherscan::etherscan_provider,
+    rpc::TesterStatus, TestArgs,
+};
 use parking_lot::RwLock;
 use reth::{
     api::FullNodeComponents,
     primitives::BlockNumberOrTag,
     providers::{BlockIdReader, BlockNumReader, StageCheckpointReader},
-    rpc::builder::auth::AuthServerHandle,
+    rpc::builder::{auth::AuthServerHandle, RpcServerHandle},
 };
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use reth_stages_types::StageId;
@@ -12,23 +15,24 @@ use reth_tracing::tracing::info;
 use std::sync::Arc;
 use tokio::sync::oneshot;
 
-/// Uses etherscan to move the chain forward **until** it has collected `max_blocks`.
+/// Uses etherscan to move the chain forward **until** it has collected `num_blocks`.
 pub async fn exex<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
-    auth_server_receiver: oneshot::Receiver<AuthServerHandle>,
+    server_receiver: oneshot::Receiver<(AuthServerHandle, RpcServerHandle)>,
     rpc_status: Arc<RwLock<TesterStatus>>,
-    etherscan: Option<String>,
-    max_blocks: u64,
+    args: TestArgs,
 ) -> eyre::Result<()> {
-    let auth_client = auth_server_receiver.await?.http_client();
+    let TestArgs { etherscan_url, num_blocks, against_rpc } = args;
+    let (auth_handle, rpc_handle) = server_receiver.await?;
+    let auth_client = auth_handle.http_client();
     let finalized = ctx.provider().finalized_block_num_hash()?.unwrap_or_default();
-    let etherscan = etherscan_provider(&ctx, etherscan)?;
+    let etherscan = etherscan_provider(&ctx, etherscan_url)?;
     let initial_height = ctx.provider().last_block_number()?;
-    
+
     let mut local_tip = initial_height;
     let mut etherscan_tip =
         etherscan.load_block(BlockNumberOrTag::Latest).await?.header.number.unwrap_or_default();
-    
+
     rpc_status.write().initial_height = initial_height;
 
     info!(local_tip, etherscan_tip, ?finalized, "Starting exex.");
@@ -45,7 +49,7 @@ pub async fn exex<Node: FullNodeComponents>(
         }
 
         // Have reached the maximum number of blocks so we can exit the exex
-        if local_tip >= initial_height + max_blocks {
+        if local_tip >= initial_height + num_blocks {
             info!(
                 etherscan_tip,
                 local_tip, storage_tip, initial_height, "Stopped moving chain forward"
@@ -54,8 +58,18 @@ pub async fn exex<Node: FullNodeComponents>(
             // Updates the `tester/status` with ready
             rpc_status.write().ready = true;
 
+            if let Some(url) = against_rpc {
+                test_rpc_equality(
+                    ctx,
+                    &url,
+                    rpc_handle.http_client().expect("should have rpc"),
+                    (storage_tip - 2)..=local_tip,
+                )
+                .await?;
+            }
+
             // Exiting would crash the node, so we sleep forever instead.
-            loop { 
+            loop {
                 tokio::time::sleep(std::time::Duration::from_secs(500)).await
             }
         }

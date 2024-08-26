@@ -3,7 +3,7 @@ use reth::{
     primitives::BlockHash,
     rpc::{api::EngineApiClient, types::engine::ForkchoiceState},
 };
-use reth_consensus_debug_client::{rich_block_to_execution_payload_v3, EtherscanBlockProvider};
+use reth_consensus_debug_client::{block_to_execution_payload_v3, EtherscanBlockProvider};
 use reth_node_ethereum::EthEngineTypes;
 use reth_rpc_layer::AuthClientService;
 use reth_tracing::tracing::warn;
@@ -18,7 +18,7 @@ pub async fn advance_chain(
 ) -> Result<(), eyre::Error> {
     let etherscan_block = etherscan.load_block(block_number.into()).await?;
 
-    let payload = rich_block_to_execution_payload_v3(etherscan_block);
+    let payload = block_to_execution_payload_v3(etherscan_block);
     let block_hash = payload.block_hash();
 
     EngineApiClient::<EthEngineTypes>::new_payload_v3(

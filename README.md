@@ -3,6 +3,8 @@
 ### `reth-tester`
 Reth node that uses ExEx & Etherscan to fill the in-memory chain and stop.
 
+By passing  `--against-rpc $URL` it will verify the local RPC responses to the remote one starting a `STORAGE_TIP - 1` to `TIP`.
+
 ### `cryo_test.sh`
 Runs cryo commands on two nodes to check correctness and compare timings.
 Modes:
