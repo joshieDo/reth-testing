@@ -1,6 +1,8 @@
 use crate::{
-    engine::advance_chain, equality::test_rpc_equality, etherscan::etherscan_provider,
-    rpc::TesterStatus, TestArgs,
+    engine::advance_chain,
+    etherscan::etherscan_provider,
+    rpc::{equality::test_rpc_equality, ext::TesterStatus},
+    TestArgs,
 };
 use parking_lot::RwLock;
 use reth::{

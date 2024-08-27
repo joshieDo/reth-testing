@@ -1,7 +1,8 @@
+use super::{MethodName, TestError};
 use crate::{
-    test_eth_rpc_method, test_filter_eth_rpc_method, test_reth_rpc_method, test_trace_rpc_method,
+    rpc::utils::report, test_eth_rpc_method, test_filter_eth_rpc_method, test_reth_rpc_method,
+    test_trace_rpc_method,
 };
-use console::Style;
 use eyre::Result;
 use futures::Future;
 use jsonrpsee::http_client::{HttpClient, HttpClientBuilder};
@@ -9,16 +10,14 @@ use reth::{
     api::FullNodeComponents,
     primitives::{BlockId, BlockNumber, BlockNumberOrTag},
     providers::{BlockReader, ReceiptProvider},
-    rpc::{
-        api::{EthApiClient, EthFilterApiClient, RethApiClient, TraceApiClient},
-        types::{Block, Filter, Index, Transaction},
-    },
+    rpc::types::{Block, Filter, Index, Transaction},
 };
 use reth_exex::ExExContext;
-use reth_tracing::tracing::{info, trace};
-use serde::Serialize;
-use similar::{ChangeTag, TextDiff};
-use std::{collections::BTreeMap, fmt::Debug, ops::RangeInclusive, pin::Pin};
+use reth_tracing::tracing::info;
+use std::{collections::BTreeMap, ops::RangeInclusive, pin::Pin};
+
+// Alias type
+type BlockTestResults = BTreeMap<BlockNumber, Vec<(MethodName, Result<(), TestError>)>>;
 
 /// Verifies that a suite of RPC calls matches the results of a remote node.
 pub async fn test_rpc_equality<Node: FullNodeComponents>(
@@ -145,86 +144,3 @@ async fn test_per_block<Node: FullNodeComponents>(
     report(results.into_iter().map(|(k, v)| (format!("Block Number {k}"), v)).collect());
     Ok(())
 }
-
-fn report(results_by_block: ReportResults) {
-    println!("\n--- RPC Method Test Results ---");
-
-    for (title, results) in results_by_block {
-        let failures: Vec<_> = results
-            .into_iter()
-            .filter_map(|(name, result)| result.err().map(|err| (name, err)))
-            .collect();
-
-        if failures.is_empty() {
-            println!("{title} ✅");
-        } else {
-            println!("\n{title} ❌");
-            for (name, err) in failures {
-                println!("    {name}: ❌ Failure ");
-                match err {
-                    TestError::Diff { local, remote } => {
-                        let diff = TextDiff::from_lines(&local, &remote);
-                        for op in diff.ops() {
-                            for change in diff.iter_changes(op).peekable() {
-                                let (sign, style) = match change.tag() {
-                                    ChangeTag::Delete => ("-", Style::new().red()),
-                                    ChangeTag::Insert => ("+", Style::new().green()),
-                                    ChangeTag::Equal => (" ", Style::new()),
-                                };
-                                print!("{}{}", style.apply_to(sign).bold(), style.apply_to(change));
-                            }
-                        }
-                    }
-                    TestError::LocalErr(err) => println!("## Local node error: {err}"),
-                    TestError::RemoteErr(err) => println!("## Remote node error: {err}"),
-                }
-            }
-        }
-    }
-
-    println!("--------------------------------\n");
-}
-
-async fn test_method<'a, F, Fut, T, E>(
-    name: &str,
-    rpc_pair: (&'a HttpClient, &'a HttpClient),
-    method_call: F,
-) -> (MethodName, Result<(), TestError>)
-where
-    F: Fn(&'a HttpClient) -> Fut + 'a,
-    Fut: std::future::Future<Output = Result<T, E>> + 'a + Send,
-    T: PartialEq + Debug + Serialize,
-    E: Debug,
-{
-    trace!("## {name}");
-
-    let (local_result, remote_result) =
-        tokio::join!(method_call(rpc_pair.0), method_call(rpc_pair.1));
-
-    let result = match (local_result, remote_result) {
-        (Ok(local), Ok(remote)) => {
-            if local == remote {
-                Ok(())
-            } else {
-                Err(TestError::Diff {
-                    local: serde_json::to_string_pretty(&local).expect("should json"),
-                    remote: serde_json::to_string_pretty(&remote).expect("should json"),
-                })
-            }
-        }
-        (Err(e), _) => Err(TestError::LocalErr(format!("{e:?}"))),
-        (Ok(_), Err(e)) => Err(TestError::RemoteErr(format!("{e:?}"))),
-    };
-
-    (name.to_string(), result)
-}
-
-enum TestError {
-    Diff { local: String, remote: String },
-    LocalErr(String),
-    RemoteErr(String),
-}
-
-type BlockTestResults = BTreeMap<BlockNumber, Vec<(MethodName, Result<(), TestError>)>>;
-type ReportResults = Vec<(String, Vec<(MethodName, Result<(), TestError>)>)>;
-type MethodName = String;

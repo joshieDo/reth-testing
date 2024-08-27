@@ -4,14 +4,12 @@ use reth::{builder::EngineNodeLauncher, cli::Cli, providers::providers::Blockcha
 use reth_engine_tree::tree::TreeConfig;
 use reth_node_ethereum::{node::EthereumAddOns, EthereumNode};
 
-mod equality;
 mod exex;
 use exex::exex;
 mod engine;
 mod etherscan;
-mod macros;
 mod rpc;
-use rpc::{TesterExt, TesterExtApiServer};
+use rpc::ext::{TesterExt, TesterExtApiServer};
 
 fn default_persistence() -> u64 {
     TreeConfig::default().persistence_threshold()
