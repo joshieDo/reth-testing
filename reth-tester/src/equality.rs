@@ -43,12 +43,11 @@ async fn test_block_range(
     let end = *block_range.end();
     let rpc_pair = (local_rpc, remote_rpc);
 
+    #[rustfmt::skip]
     report(vec![(
         format!("{}..={}", start, end),
-        futures::future::join_all([test_filter_eth_rpc_method!(
-            rpc_pair,
-            logs,
-            Filter::new().from_block(start).to_block(end)
+        futures::future::join_all([
+            test_filter_eth_rpc_method!(rpc_pair, logs, Filter::new().from_block(start).to_block(end)
         )])
         .await,
     )]);
@@ -84,6 +83,7 @@ async fn test_per_block<Node: FullNodeComponents>(
         let block_hash = block.hash_slow();
 
         // Block based
+        #[rustfmt::skip]
         tests.extend(vec![
             test_eth_rpc_method!(rpc_pair, block_by_hash, block_hash, true),
             test_eth_rpc_method!(rpc_pair, block_by_number, block_or_tag, true),
@@ -110,50 +110,29 @@ async fn test_per_block<Node: FullNodeComponents>(
             let signer = tx.recover_signer().expect("should recover sender");
 
             if let Some(log) = receipt.logs.first().cloned() {
-                tests.push(test_filter_eth_rpc_method!(
-                    rpc_pair,
-                    logs,
-                    Filter::new().select(block_number).address(log.address)
-                ));
+                #[rustfmt::skip]
+                tests.push(
+                    test_filter_eth_rpc_method!(rpc_pair, logs, Filter::new().select(block_number).address(log.address))
+                );
             }
 
             if let Some(topic) =
                 receipt.logs.last().and_then(|log| log.data.topics().first()).cloned()
             {
-                tests.push(test_filter_eth_rpc_method!(
-                    rpc_pair,
-                    logs,
-                    Filter::new().select(block_number).event_signature(topic)
-                ));
+                #[rustfmt::skip]
+                tests.push(
+                    test_filter_eth_rpc_method!(rpc_pair, logs, Filter::new().select(block_number).event_signature(topic))
+                );
             }
 
+            #[rustfmt::skip]
             tests.extend(vec![
                 test_eth_rpc_method!(rpc_pair, raw_transaction_by_hash, tx_hash),
                 test_eth_rpc_method!(rpc_pair, transaction_by_hash, tx_hash),
-                test_eth_rpc_method!(
-                    rpc_pair,
-                    raw_transaction_by_block_hash_and_index,
-                    block_hash,
-                    index
-                ),
-                test_eth_rpc_method!(
-                    rpc_pair,
-                    transaction_by_block_hash_and_index,
-                    block_hash,
-                    index
-                ),
-                test_eth_rpc_method!(
-                    rpc_pair,
-                    raw_transaction_by_block_number_and_index,
-                    block_or_tag,
-                    index
-                ),
-                test_eth_rpc_method!(
-                    rpc_pair,
-                    transaction_by_block_number_and_index,
-                    block_or_tag,
-                    index
-                ),
+                test_eth_rpc_method!(rpc_pair, raw_transaction_by_block_hash_and_index, block_hash,index),
+                test_eth_rpc_method!(rpc_pair, transaction_by_block_hash_and_index, block_hash, index),
+                test_eth_rpc_method!(rpc_pair, raw_transaction_by_block_number_and_index, block_or_tag, index ),
+                test_eth_rpc_method!(rpc_pair, transaction_by_block_number_and_index, block_or_tag, index ),
                 test_eth_rpc_method!(rpc_pair, transaction_receipt, tx_hash),
                 test_eth_rpc_method!(rpc_pair, transaction_count, signer, Some(block_id)),
                 test_eth_rpc_method!(rpc_pair, balance, signer, Some(block_id)),
