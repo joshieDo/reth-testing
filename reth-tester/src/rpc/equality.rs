@@ -1,7 +1,7 @@
 use super::{MethodName, TestError};
 use crate::{
-    rpc::utils::report, test_eth_rpc_method, test_filter_eth_rpc_method, test_reth_rpc_method,
-    test_trace_rpc_method,
+    rpc::utils::report, test_debug_rpc_method, test_eth_rpc_method, test_filter_eth_rpc_method,
+    test_reth_rpc_method, test_trace_rpc_method,
 };
 use eyre::Result;
 use futures::Future;
@@ -10,7 +10,10 @@ use reth::{
     api::FullNodeComponents,
     primitives::{BlockId, BlockNumber, BlockNumberOrTag},
     providers::{BlockReader, ReceiptProvider},
-    rpc::types::{Block, Filter, Index, Transaction},
+    rpc::types::{
+        trace::geth::{GethDebugBuiltInTracerType, GethDebugTracerType, GethDebugTracingOptions},
+        Block, Filter, Index, Transaction,
+    },
 };
 use reth_exex::ExExContext;
 use reth_tracing::tracing::info;
@@ -102,6 +105,9 @@ async fn test_per_block<Node: FullNodeComponents>(
 
         // Transaction/Receipt based RPCs
         for (index, tx) in block.body.iter().enumerate() {
+            let tracer_opts = Some(GethDebugTracingOptions::default().with_tracer(
+                GethDebugTracerType::BuiltInTracer(GethDebugBuiltInTracerType::CallTracer),
+            ));
             let receipt =
                 provider.receipt(first_tx_num + index as u64)?.expect("should have receipt");
             let index: Index = index.into();
@@ -135,7 +141,7 @@ async fn test_per_block<Node: FullNodeComponents>(
                 test_eth_rpc_method!(rpc_pair, transaction_receipt, tx_hash),
                 test_eth_rpc_method!(rpc_pair, transaction_count, signer, Some(block_id)),
                 test_eth_rpc_method!(rpc_pair, balance, signer, Some(block_id)),
-                // test_debug_rpc_method!(rpc_pair, debug_trace_transaction, tx_hash, None)
+                test_debug_rpc_method!(rpc_pair, debug_trace_transaction, tx_hash, tracer_opts)
             ]);
         }
         let block_results = futures::future::join_all(tests).await;
