@@ -7,7 +7,7 @@ use eyre::Result;
 use futures::Future;
 use jsonrpsee::http_client::HttpClient;
 use reth::{
-    primitives::{BlockId, BlockNumber, BlockNumberOrTag},
+    primitives::{BlockHash, BlockId, BlockNumber, BlockNumberOrTag},
     rpc::{
         api::EthApiClient,
         types::{
@@ -81,33 +81,23 @@ impl RpcTester {
 
             let mut tests = vec![];
 
-            let block_or_tag = BlockNumberOrTag::Number(block_number);
-            let block_id = BlockId::Number(block_or_tag);
-            let block: Block = EthApiClient::<Transaction, Block>::block_by_number(
-                &self.truth,
-                block_number.into(),
-                true,
-            )
-            .await?
-            .expect("should have block from range");
-            assert_eq!(block.header.number.expect("should have number"), block_number);
-            let block_hash = block.header.hash.expect("block range should not include pending");
+            let (block, block_hash, block_tag, block_id) = self.fetch_block(block_number).await?;
 
             // Block based
             #[rustfmt::skip]
             tests.extend(vec![
                 test_eth_rpc_method!(rpc_pair, block_by_hash, block_hash, true),
-                test_eth_rpc_method!(rpc_pair, block_by_number, block_or_tag, true),
+                test_eth_rpc_method!(rpc_pair, block_by_number, block_tag, true),
                 test_eth_rpc_method!(rpc_pair, block_transaction_count_by_hash, block_hash),
-                test_eth_rpc_method!(rpc_pair, block_transaction_count_by_number, block_or_tag),
+                test_eth_rpc_method!(rpc_pair, block_transaction_count_by_number, block_tag),
                 test_eth_rpc_method!(rpc_pair, block_uncles_count_by_hash, block_hash),
-                test_eth_rpc_method!(rpc_pair, block_uncles_count_by_number, block_or_tag),
+                test_eth_rpc_method!(rpc_pair, block_uncles_count_by_number, block_tag),
                 test_eth_rpc_method!(rpc_pair, block_receipts, block_id),
-                test_eth_rpc_method!(rpc_pair, header_by_number, block_or_tag),
+                test_eth_rpc_method!(rpc_pair, header_by_number, block_tag),
                 test_eth_rpc_method!(rpc_pair, header_by_hash, block_hash),
                 test_reth_rpc_method!(rpc_pair, reth_get_balance_changes_in_block, block_id),
                 // Response is too big & Http(TooLarge))
-                // test_debug_rpc_method!(rpc_pair, debug_trace_block_by_number, block_or_tag, None)
+                // test_debug_rpc_method!(rpc_pair, debug_trace_block_by_number, block_tag, None)
                 test_trace_rpc_method!(rpc_pair, trace_block, block_id),
                 test_filter_eth_rpc_method!(rpc_pair, logs, Filter::new().select(block_number)),
             ]);
@@ -152,8 +142,8 @@ impl RpcTester {
                     test_eth_rpc_method!(rpc_pair, transaction_by_hash, tx.hash),
                     test_eth_rpc_method!(rpc_pair, raw_transaction_by_block_hash_and_index, block_hash,index),
                     test_eth_rpc_method!(rpc_pair, transaction_by_block_hash_and_index, block_hash, index),
-                    test_eth_rpc_method!(rpc_pair, raw_transaction_by_block_number_and_index, block_or_tag, index ),
-                    test_eth_rpc_method!(rpc_pair, transaction_by_block_number_and_index, block_or_tag, index ),
+                    test_eth_rpc_method!(rpc_pair, raw_transaction_by_block_number_and_index, block_tag, index ),
+                    test_eth_rpc_method!(rpc_pair, transaction_by_block_number_and_index, block_tag, index ),
                     test_eth_rpc_method!(rpc_pair, transaction_receipt, tx.hash),
                     test_eth_rpc_method!(rpc_pair, transaction_count, tx.from, Some(block_id)),
                     test_eth_rpc_method!(rpc_pair, balance, tx.from, Some(block_id)),
@@ -183,5 +173,24 @@ impl RpcTester {
         )]);
 
         Ok(())
+    }
+
+    /// Fetches block and block identifiers from `self.truth`.
+    async fn fetch_block(
+        &self,
+        block_number: u64,
+    ) -> Result<(Block, BlockHash, BlockNumberOrTag, BlockId), eyre::Error> {
+        let block: Block = EthApiClient::<Transaction, Block>::block_by_number(
+            &self.truth,
+            block_number.into(),
+            true,
+        )
+        .await?
+        .expect("should have block from range");
+        assert_eq!(block.header.number.expect("should have number"), block_number);
+        let block_hash = block.header.hash.expect("block range should not include pending");
+        let block_tag = BlockNumberOrTag::Number(block_number);
+        let block_id = BlockId::Number(block_tag);
+        Ok((block, block_hash, block_tag, block_id))
     }
 }
