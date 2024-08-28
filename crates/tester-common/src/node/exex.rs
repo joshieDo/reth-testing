@@ -70,6 +70,8 @@ pub async fn exex<Node: FullNodeComponents>(
                 )
                 .test_equality((storage_tip - 2)..=local_tip)
                 .await?;
+
+                return Ok(())
             }
 
             // Exiting would crash the node, so we sleep forever instead.
