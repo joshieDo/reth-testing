@@ -34,6 +34,7 @@ reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", branch = "ma
 reth-node-optimism = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
 reth-rpc-layer = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
 reth-stages-types = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
+reth-rpc-types = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
 reth-tracing = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
 
 alloy-chains = "0.1"

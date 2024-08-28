@@ -1,5 +1,5 @@
 use super::{args::TestArgs, ext::TesterStatus};
-use crate::rpc::equality::test_rpc_equality;
+use crate::rpc::equality::RpcTester;
 use fake_cl::FakeCl;
 use jsonrpsee::http_client::HttpClientBuilder;
 use parking_lot::RwLock;
@@ -64,12 +64,11 @@ pub async fn exex<Node: FullNodeComponents>(
             rpc_status.write().ready = true;
 
             if let Some(remote_url) = against_rpc {
-                test_rpc_equality(
-                    ctx,
-                    &rpc_handle.http_client().expect("should have rpc"),
-                    &HttpClientBuilder::default().build(&remote_url)?,
-                    (storage_tip - 2)..=local_tip,
+                RpcTester::new(
+                    rpc_handle.http_client().expect("should have rpc"),
+                    HttpClientBuilder::default().build(&remote_url)?,
                 )
+                .test_equality((storage_tip - 2)..=local_tip)
                 .await?;
             }
 
