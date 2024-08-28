@@ -25,21 +25,27 @@ type BlockTestResults = BTreeMap<BlockNumber, Vec<(MethodName, Result<(), TestEr
 /// RpcTester
 #[derive(Debug)]
 pub struct RpcTester {
+    /// First RPC node.
+    rpc1: HttpClient,
+    /// Second RPC node.
+    rpc2: HttpClient,
+    /// Source of truth. This may be one of the rpcs above for convenience reasons.
+    truth: HttpClient,
     /// Whether to query tracing methods
-    tracing: bool,
+    use_tracing: bool,
     /// Whether to query reth namespace
-    reth: bool,
+    use_reth: bool,
 }
 
 impl RpcTester {
     /// Returns [`Self`].
     pub fn new() -> Self {
-        RpcTester { tracing: true, reth: true }
+        RpcTester { use_tracing: true, reth: true }
     }
 
     /// Disables tracing calls.
     pub fn without_tracing(mut self) -> Self {
-        self.tracing = true;
+        self.use_tracing = true;
         self
     }
 
