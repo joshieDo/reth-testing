@@ -24,13 +24,30 @@ pub struct CliArgs {
     /// Ending block number
     #[arg(long, value_name = "BLOCK_END_INCLUSIVE")]
     pub to: BlockNumber,
+
+    /// Choose the source of truth: either "rpc1", "rpc2" (default), or a custom URL.
+    ///
+    /// Used for fetching blocks and receipts.
+    #[arg(long, value_name = "SOURCE", default_value = "rpc2")]
+    pub truth: String,
 }
 
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
     let args = CliArgs::parse();
 
-    let rpc_tester = RpcTester::new(HttpClientBuilder::default().build(&args.rpc1)?, HttpClientBuilder::default().build(&args.rpc2)?);
+    let truth = match args.truth.as_str() {
+        "rpc1" => &args.rpc1,
+        "rpc2" => &args.rpc2,
+        custom_url => custom_url,
+    };
+
+    let rpc_tester = RpcTester::new(
+        HttpClientBuilder::default().build(&args.rpc1)?,
+        HttpClientBuilder::default().build(&args.rpc2)?,
+    )
+    .with_truth(HttpClientBuilder::default().build(truth)?);
+
     rpc_tester.test_equality(args.from..=args.to).await?;
 
     Ok(())

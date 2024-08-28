@@ -47,7 +47,7 @@ impl RpcTester {
         Self { use_tracing: true, use_reth: true, rpc1, rpc2, truth }
     }
 
-    /// Adds [`HttpClient`] as source of truth.
+    /// Adds [`HttpClient`] as source of truth for blocks and receipts.
     pub fn with_truth(mut self, truth: HttpClient) -> Self {
         self.truth = truth;
         self

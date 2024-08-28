@@ -3,7 +3,9 @@
 use alloy_chains::Chain;
 use jsonrpsee::http_client::{transport::HttpBackend, HttpClient};
 use reth::{
-    api::EngineTypes, primitives::BlockHash, rpc::{api::EngineApiClient, types::engine::ForkchoiceState}
+    api::EngineTypes,
+    primitives::BlockHash,
+    rpc::{api::EngineApiClient, types::engine::ForkchoiceState},
 };
 use reth_consensus_debug_client::{block_to_execution_payload_v3, EtherscanBlockProvider};
 use reth_rpc_layer::AuthClientService;
