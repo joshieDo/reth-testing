@@ -10,7 +10,8 @@ members = [
     "crates/fake-cl/",
     "crates/reth-tester/",
     "crates/reth-op-tester/",
-    "crates/tester-common/"
+    "crates/rpc-tester",
+    "crates/tester-common/",
 ]
 default-members = ["crates/reth-tester/"]
 
@@ -22,6 +23,7 @@ resolver = "2"
 fake-cl = { path = "crates/fake-cl" }
 reth-tester = { path = "crates/reth-tester" }
 reth-op-tester = { path = "crates/reth-op-tester" }
+rpc-tester = { path = "crates/rpc-tester" }
 tester-common = { path = "crates/tester-common" }
 
 reth = { git = "https://github.com/paradigmxyz/reth", branch = "main"}

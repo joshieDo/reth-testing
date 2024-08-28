@@ -1,5 +1,4 @@
 pub mod equality;
-pub mod ext;
 mod utils;
 
 /// Equality rpc test error

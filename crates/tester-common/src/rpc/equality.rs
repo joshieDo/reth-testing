@@ -5,7 +5,7 @@ use crate::{
 };
 use eyre::Result;
 use futures::Future;
-use jsonrpsee::http_client::{HttpClient, HttpClientBuilder};
+use jsonrpsee::http_client::HttpClient;
 use reth::{
     api::FullNodeComponents,
     primitives::{BlockId, BlockNumber, BlockNumberOrTag},
@@ -22,16 +22,43 @@ use std::{collections::BTreeMap, ops::RangeInclusive, pin::Pin};
 // Alias type
 type BlockTestResults = BTreeMap<BlockNumber, Vec<(MethodName, Result<(), TestError>)>>;
 
+/// RpcTester
+#[derive(Debug)]
+pub struct RpcTester {
+    /// Whether to query tracing methods
+    tracing: bool,
+    /// Whether to query reth namespace
+    reth: bool,
+}
+
+impl RpcTester {
+    /// Returns [`Self`].
+    pub fn new() -> Self {
+        RpcTester { tracing: true, reth: true }
+    }
+
+    /// Disables tracing calls.
+    pub fn without_tracing(mut self) -> Self {
+        self.tracing = true;
+        self
+    }
+
+    /// Disables reth namespace.
+    pub fn without_reth(mut self) -> Self {
+        self.reth = true;
+        self
+    }
+}
+
 /// Verifies that a suite of RPC calls matches the results of a remote node.
 pub async fn test_rpc_equality<Node: FullNodeComponents>(
     ctx: ExExContext<Node>,
-    remote_rpc_url: &str,
-    local_rpc: HttpClient,
+    local_rpc: &HttpClient,
+    remote_rpc: &HttpClient,
     block_range: RangeInclusive<BlockNumber>,
 ) -> Result<()> {
-    let remote_rpc = HttpClientBuilder::default().build(remote_rpc_url)?;
-    test_per_block(&local_rpc, &remote_rpc, block_range.clone(), &ctx).await?;
-    test_block_range(&local_rpc, &remote_rpc, block_range).await?;
+    test_per_block(local_rpc, remote_rpc, block_range.clone(), &ctx).await?;
+    test_block_range(local_rpc, remote_rpc, block_range).await?;
     Ok(())
 }
 

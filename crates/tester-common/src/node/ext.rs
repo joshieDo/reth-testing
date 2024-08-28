@@ -1,9 +1,8 @@
-use std::sync::Arc;
-
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
 use parking_lot::RwLock;
 use reth::primitives::BlockNumber;
 use serde::Serialize;
+use std::sync::Arc;
 
 /// trait interface for a custom rpc namespace: `tester`
 #[rpc(server, namespace = "tester")]

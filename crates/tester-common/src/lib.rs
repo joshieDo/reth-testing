@@ -1,4 +1,6 @@
 #![cfg_attr(not(test), warn(unused_crate_dependencies))]
-pub mod args;
-pub mod exex;
+/// node common libraries.
+pub mod node;
+
+/// rpc testing
 pub mod rpc;

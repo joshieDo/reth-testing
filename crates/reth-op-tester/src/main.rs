@@ -2,10 +2,10 @@
 use clap::Parser;
 use reth::{builder::EngineNodeLauncher, cli::Cli, providers::providers::BlockchainProvider2};
 use reth_node_optimism::{node::OptimismAddOns, OptimismNode};
-use tester_common::{
+use tester_common::node::{
     args::TestArgs,
     exex::exex,
-    rpc::ext::{TesterExt, TesterExtApiServer},
+    ext::{TesterExt, TesterExtApiServer}
 };
 
 fn main() {

@@ -1,0 +1,10 @@
+[package]
+name = "rpc-tester"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+exclude.workspace = true
+
+[dependencies]
+tester-common.workspace = true

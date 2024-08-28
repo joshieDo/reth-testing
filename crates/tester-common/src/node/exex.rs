@@ -1,8 +1,10 @@
 use crate::{
-    args::TestArgs,
-    rpc::{equality::test_rpc_equality, ext::TesterStatus},
+    rpc::{equality::test_rpc_equality, },
 };
+use super::args::TestArgs;
+use super::ext::TesterStatus;
 use fake_cl::FakeCl;
+use jsonrpsee::http_client::HttpClientBuilder;
 use parking_lot::RwLock;
 use reth::{
     api::FullNodeComponents,
@@ -64,11 +66,11 @@ pub async fn exex<Node: FullNodeComponents>(
             // Updates the `tester/status` with ready
             rpc_status.write().ready = true;
 
-            if let Some(url) = against_rpc {
+            if let Some(remote_url) = against_rpc {
                 test_rpc_equality(
                     ctx,
-                    &url,
-                    rpc_handle.http_client().expect("should have rpc"),
+                    &rpc_handle.http_client().expect("should have rpc"),
+                    &HttpClientBuilder::default().build(&remote_url)?,
                     (storage_tip - 2)..=local_tip,
                 )
                 .await?;
