@@ -1,4 +1,6 @@
 pub mod equality;
+mod macros;
+mod report;
 mod utils;
 
 /// Equality rpc test error

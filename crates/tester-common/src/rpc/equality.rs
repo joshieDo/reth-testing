@@ -1,6 +1,6 @@
 use super::{MethodName, TestError};
 use crate::{
-    rpc::utils::report, test_debug_rpc_method, test_eth_rpc_method, test_filter_eth_rpc_method,
+    rpc::report::report, test_debug_rpc_method, test_eth_rpc_method, test_filter_eth_rpc_method,
     test_reth_rpc_method, test_trace_rpc_method,
 };
 use eyre::Result;
@@ -39,8 +39,15 @@ pub struct RpcTester {
 
 impl RpcTester {
     /// Returns [`Self`].
-    pub fn new() -> Self {
-        RpcTester { use_tracing: true, reth: true }
+    pub fn new(rpc1: HttpClient, rpc2: HttpClient) -> Self {
+        let truth = rpc1.clone();
+        Self { use_tracing: true, use_reth: true, rpc1, rpc2, truth }
+    }
+
+    /// Adds [`HttpClient`] as source of truth.
+    pub fn with_truth(mut self, truth: HttpClient) -> Self {
+        self.truth = truth;
+        self
     }
 
     /// Disables tracing calls.
@@ -51,7 +58,7 @@ impl RpcTester {
 
     /// Disables reth namespace.
     pub fn without_reth(mut self) -> Self {
-        self.reth = true;
+        self.use_reth = true;
         self
     }
 }
@@ -99,6 +106,8 @@ async fn test_per_block<Node: FullNodeComponents>(
 ) -> Result<(), eyre::Error> {
     let mut results = BlockTestResults::new();
     let rpc_pair = (local_rpc, remote_rpc);
+
+    // TODO: change to self.truth
 
     for block_number in block_range {
         info!("# test rpc {block_number}");

@@ -1,8 +1,5 @@
-use crate::{
-    rpc::{equality::test_rpc_equality, },
-};
-use super::args::TestArgs;
-use super::ext::TesterStatus;
+use super::{args::TestArgs, ext::TesterStatus};
+use crate::rpc::equality::test_rpc_equality;
 use fake_cl::FakeCl;
 use jsonrpsee::http_client::HttpClientBuilder;
 use parking_lot::RwLock;

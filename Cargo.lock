@@ -7229,6 +7229,7 @@ checksum = "afab94fb28594581f62d981211a9a4d53cc8130bbcbbb89a0440d9b8e81a7746"
 name = "rpc-tester"
 version = "1.0.0"
 dependencies = [
+ "clap",
  "tester-common",
 ]
 

@@ -5,7 +5,7 @@ use reth_node_optimism::{node::OptimismAddOns, OptimismNode};
 use tester_common::node::{
     args::TestArgs,
     exex::exex,
-    ext::{TesterExt, TesterExtApiServer}
+    ext::{TesterExt, TesterExtApiServer},
 };
 
 fn main() {

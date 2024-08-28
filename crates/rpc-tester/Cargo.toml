@@ -8,3 +8,4 @@ exclude.workspace = true
 
 [dependencies]
 tester-common.workspace = true
+clap.workspace = true

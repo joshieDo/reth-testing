@@ -5,7 +5,7 @@ use reth_node_ethereum::{node::EthereumAddOns, EthereumNode};
 use tester_common::node::{
     args::TestArgs,
     exex::exex,
-    ext::{TesterExt, TesterExtApiServer}
+    ext::{TesterExt, TesterExtApiServer},
 };
 
 fn main() {
