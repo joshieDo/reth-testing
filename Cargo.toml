@@ -1,18 +1,40 @@
-[package]
-name = "reth-tester"
-version = "0.0.0"
-publish = false
+[workspace.package]
+version = "1.0.0"
 edition = "2021"
+rust-version = "1.80"
+license = "MIT OR Apache-2.0"
+exclude = [".github/"]
 
-[dependencies]
-reth = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
+[workspace]
+members = [
+    "crates/fake-cl/",
+    "crates/reth-tester/",
+    "crates/reth-op-tester/",
+    "crates/tester-common/"
+]
+default-members = ["crates/reth-tester/"]
+
+# Explicitly set the resolver to version 2, which is the default for packages with edition >= 2021
+# https://doc.rust-lang.org/edition-guide/rust-2021/default-cargo-resolver.html
+resolver = "2"
+
+[workspace.dependencies]
+fake-cl = { path = "crates/fake-cl" }
+reth-tester = { path = "crates/reth-tester" }
+reth-op-tester = { path = "crates/reth-op-tester" }
+tester-common = { path = "crates/tester-common" }
+
+reth = { git = "https://github.com/paradigmxyz/reth", branch = "main"}
 reth-consensus-debug-client = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
 reth-exex = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
 reth-engine-tree = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
 reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
+reth-node-optimism = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
 reth-rpc-layer = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
 reth-stages-types = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
 reth-tracing = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
+
+alloy-chains = "0.1"
 
 console = "0.15.0"
 clap = "4"

@@ -1,6 +1,6 @@
 
 ```bash
-$ reth node --help
+$ reth-tester node --help
 (...)
 Testing ExEx:
       --etherscan-url <ETHERSCAN_API_URL>

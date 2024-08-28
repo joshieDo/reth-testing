@@ -1,4 +1,4 @@
-reth-tester/target
-/target
+target/
 .cryo/
 cryo_script*
+*.parquet

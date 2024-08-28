@@ -1,5 +1,5 @@
-pub(crate) mod equality;
-pub(crate) mod ext;
+pub mod equality;
+pub mod ext;
 mod utils;
 
 /// Equality rpc test error

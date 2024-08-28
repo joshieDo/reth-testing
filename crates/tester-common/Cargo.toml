@@ -1,0 +1,25 @@
+[package]
+name = "tester-common"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[dependencies]
+reth.workspace = true
+reth-exex.workspace = true
+reth-engine-tree.workspace = true
+reth-stages-types.workspace = true
+reth-tracing.workspace = true
+
+fake-cl.workspace = true
+
+clap.workspace = true
+console.workspace = true
+eyre.workspace = true
+futures.workspace = true
+jsonrpsee.workspace = true
+parking_lot.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+similar.workspace = true
+tokio.workspace = true

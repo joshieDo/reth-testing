@@ -1,0 +1,16 @@
+[package]
+name = "fake-cl"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[dependencies]
+reth = { workspace = true, features = ["optimism"] } 
+reth-consensus-debug-client.workspace = true
+reth-node-optimism = { workspace = true, features = ["optimism"] } 
+reth-rpc-layer.workspace = true
+reth-tracing.workspace = true
+
+alloy-chains.workspace = true
+eyre.workspace = true
+jsonrpsee.workspace = true

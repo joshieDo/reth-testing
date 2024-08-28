@@ -1,9 +1,8 @@
 use crate::{
-    engine::advance_chain,
-    etherscan::etherscan_provider,
+    args::TestArgs,
     rpc::{equality::test_rpc_equality, ext::TesterStatus},
-    TestArgs,
 };
+use fake_cl::FakeCl;
 use parking_lot::RwLock;
 use reth::{
     api::FullNodeComponents,
@@ -28,12 +27,17 @@ pub async fn exex<Node: FullNodeComponents>(
     let (auth_handle, rpc_handle) = server_receiver.await?;
     let auth_client = auth_handle.http_client();
     let finalized = ctx.provider().finalized_block_num_hash()?.unwrap_or_default();
-    let etherscan = etherscan_provider(&ctx, etherscan_url)?;
+    let mut fake_cl = FakeCl::new(ctx.config.chain.chain, etherscan_url)?;
     let initial_height = ctx.provider().last_block_number()?;
 
     let mut local_tip = initial_height;
-    let mut etherscan_tip =
-        etherscan.load_block(BlockNumberOrTag::Latest).await?.header.number.unwrap_or_default();
+    let mut etherscan_tip = fake_cl
+        .etherscan
+        .load_block(BlockNumberOrTag::Latest)
+        .await?
+        .header
+        .number
+        .unwrap_or_default();
 
     rpc_status.write().initial_height = initial_height;
 
@@ -81,7 +85,7 @@ pub async fn exex<Node: FullNodeComponents>(
             info!(etherscan_tip, local_tip, storage_tip, "Advancing chain");
 
             local_tip += 1;
-            advance_chain(&auth_client, &etherscan, local_tip, finalized.hash).await?;
+            fake_cl.advance_chain(&auth_client, local_tip, finalized.hash).await?;
 
             if let Some(notification) = ctx.notifications.recv().await {
                 match &notification {
@@ -105,7 +109,12 @@ pub async fn exex<Node: FullNodeComponents>(
         // Avoids hitting rate limits
         tokio::time::sleep(std::time::Duration::from_millis(500)).await;
 
-        etherscan_tip =
-            etherscan.load_block(BlockNumberOrTag::Latest).await?.header.number.unwrap_or_default()
+        etherscan_tip = fake_cl
+            .etherscan
+            .load_block(BlockNumberOrTag::Latest)
+            .await?
+            .header
+            .number
+            .unwrap_or_default()
     }
 }
