@@ -5,9 +5,8 @@ publish = false
 edition = "2021"
 
 [dependencies]
-reth = { workspace = true, features = ["optimism"] } 
+reth.workspace = true
 reth-consensus-debug-client.workspace = true
-reth-node-optimism = { workspace = true, features = ["optimism"] } 
 reth-rpc-layer.workspace = true
 reth-tracing.workspace = true
 

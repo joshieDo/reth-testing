@@ -85,7 +85,7 @@ pub async fn exex<Node: FullNodeComponents>(
             info!(etherscan_tip, local_tip, storage_tip, "Advancing chain");
 
             local_tip += 1;
-            fake_cl.advance_chain(&auth_client, local_tip, finalized.hash).await?;
+            fake_cl.advance_chain::<Node::Engine>(&auth_client, local_tip, finalized.hash).await?;
 
             if let Some(notification) = ctx.notifications.recv().await {
                 match &notification {

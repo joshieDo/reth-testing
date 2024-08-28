@@ -2192,7 +2192,6 @@ dependencies = [
  "jsonrpsee",
  "reth",
  "reth-consensus-debug-client",
- "reth-node-optimism",
  "reth-rpc-layer",
  "reth-tracing",
 ]
