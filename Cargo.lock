@@ -7229,7 +7229,10 @@ name = "rpc-tester"
 version = "1.0.0"
 dependencies = [
  "clap",
+ "eyre",
+ "jsonrpsee",
  "tester-common",
+ "tokio",
 ]
 
 [[package]]

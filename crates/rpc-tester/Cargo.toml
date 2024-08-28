@@ -8,4 +8,8 @@ exclude.workspace = true
 
 [dependencies]
 tester-common.workspace = true
+
 clap.workspace = true
+eyre.workspace = true
+jsonrpsee.workspace = true
+tokio.workspace = true

@@ -1,4 +1,6 @@
 use clap::Parser;
+use jsonrpsee::http_client::HttpClientBuilder;
+use tester_common::rpc::equality::RpcTester;
 
 type BlockNumber = u64;
 
@@ -24,7 +26,12 @@ pub struct CliArgs {
     pub to: BlockNumber,
 }
 
-fn main() {
+#[tokio::main]
+async fn main() -> eyre::Result<()> {
     let args = CliArgs::parse();
-    println!("{:?}", args);
+
+    let rpc_tester = RpcTester::new(HttpClientBuilder::default().build(&args.rpc1)?, HttpClientBuilder::default().build(&args.rpc2)?);
+    rpc_tester.test_equality(args.from..=args.to).await?;
+
+    Ok(())
 }
