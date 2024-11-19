@@ -1,6 +1,6 @@
+use alloy_primitives::BlockNumber;
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
 use parking_lot::RwLock;
-use reth::primitives::BlockNumber;
 use serde::Serialize;
 use std::sync::Arc;
 

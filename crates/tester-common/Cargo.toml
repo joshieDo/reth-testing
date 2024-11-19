@@ -12,6 +12,8 @@ reth-stages-types.workspace = true
 reth-tracing.workspace = true
 
 fake-cl.workspace = true
+alloy-primitives.workspace = true
+alloy-rpc-types-trace.workspace = true
 
 clap.workspace = true
 console.workspace = true

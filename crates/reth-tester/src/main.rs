@@ -1,6 +1,9 @@
 #![cfg_attr(not(test), warn(unused_crate_dependencies))]
 use clap::Parser;
-use reth::{builder::EngineNodeLauncher, cli::Cli, providers::providers::BlockchainProvider2};
+use reth::{
+    builder::EngineNodeLauncher, chainspec::EthereumChainSpecParser, cli::Cli,
+    providers::providers::BlockchainProvider2,
+};
 use reth_node_ethereum::{node::EthereumAddOns, EthereumNode};
 use tester_common::node::{
     args::TestArgs,
@@ -14,12 +17,12 @@ fn main() {
     let rpc_ext = TesterExt::new();
     let rpc_status = rpc_ext.watcher.clone();
 
-    Cli::<TestArgs>::parse()
+    Cli::<EthereumChainSpecParser, TestArgs>::parse()
         .run(|builder, args| async move {
             let handle = builder
                 .with_types_and_provider::<EthereumNode, BlockchainProvider2<_>>()
                 .with_components(EthereumNode::components())
-                .with_add_ons::<EthereumAddOns>()
+                .with_add_ons(EthereumAddOns::default())
                 .extend_rpc_modules(move |ctx| {
                     ctx.modules.merge_configured(rpc_ext.into_rpc())?;
                     Ok(())
@@ -35,6 +38,7 @@ fn main() {
                     let launcher = EngineNodeLauncher::new(
                         builder.task_executor().clone(),
                         builder.config().datadir(),
+                        Default::default(),
                     );
                     builder.launch_with(launcher)
                 })

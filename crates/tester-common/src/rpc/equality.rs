@@ -3,19 +3,24 @@ use crate::{
     rpc::report::report, test_debug_rpc_method, test_eth_rpc_method, test_filter_eth_rpc_method,
     test_reth_rpc_method, test_trace_rpc_method,
 };
+use alloy_primitives::{BlockHash, BlockNumber};
+use alloy_rpc_types_trace::geth::{
+    GethDebugBuiltInTracerType, GethDebugTracerType, GethDebugTracingOptions,
+};
 use eyre::Result;
 use futures::Future;
 use jsonrpsee::http_client::HttpClient;
-use reth::{
-    primitives::{BlockHash, BlockId, BlockNumber, BlockNumberOrTag},
-    rpc::{
-        api::EthApiClient,
-        types::{
-            trace::geth::{
-                GethDebugBuiltInTracerType, GethDebugTracerType, GethDebugTracingOptions,
-            },
-            Block, Filter, Index, Transaction,
-        },
+use reth::rpc::{
+    api::EthApiClient,
+    types::{
+        // trace::geth::{GethDebugBuiltInTracerType, GethDebugTracerType, GethDebugTracingOptions},
+        Block,
+        BlockId,
+        BlockNumberOrTag,
+        Filter,
+        Index,
+        Receipt,
+        Transaction,
     },
 };
 use reth_tracing::tracing::{info, trace};
@@ -107,25 +112,24 @@ impl RpcTester {
                 let tracer_opts = Some(GethDebugTracingOptions::default().with_tracer(
                     GethDebugTracerType::BuiltInTracer(GethDebugBuiltInTracerType::CallTracer),
                 ));
+                let tx_hash = *(tx.inner.tx_hash());
 
                 if let Some(receipt) =
-                    EthApiClient::<Transaction, Block>::transaction_receipt(&self.truth, tx.hash)
-                        .await?
+                    EthApiClient::<Transaction, Block, Receipt>::transaction_receipt(
+                        &self.truth,
+                        tx_hash,
+                    )
+                    .await?
                 {
-                    if let Some(log) = receipt.inner.inner.logs().first().cloned() {
+                    if let Some(log) = receipt.logs.first().cloned() {
                         #[rustfmt::skip]
                         tests.push(
-                            test_filter_eth_rpc_method!(self, logs, Filter::new().select(block_number).address(log.address()))
+                            test_filter_eth_rpc_method!(self, logs, Filter::new().select(block_number).address(log.address))
                         );
                     }
 
-                    if let Some(topic) = receipt
-                        .inner
-                        .inner
-                        .logs()
-                        .last()
-                        .and_then(|log| log.data().topics().first())
-                        .cloned()
+                    if let Some(topic) =
+                        receipt.logs.last().and_then(|log| log.data.topics().first()).cloned()
                     {
                         #[rustfmt::skip]
                         tests.push(
@@ -138,16 +142,16 @@ impl RpcTester {
 
                 #[rustfmt::skip]
                 tests.extend(vec![
-                    test_eth_rpc_method!(self, raw_transaction_by_hash, tx.hash),
-                    test_eth_rpc_method!(self, transaction_by_hash, tx.hash),
+                    test_eth_rpc_method!(self, raw_transaction_by_hash, tx_hash),
+                    test_eth_rpc_method!(self, transaction_by_hash, tx_hash),
                     test_eth_rpc_method!(self, raw_transaction_by_block_hash_and_index, block_hash,index),
                     test_eth_rpc_method!(self, transaction_by_block_hash_and_index, block_hash, index),
                     test_eth_rpc_method!(self, raw_transaction_by_block_number_and_index, block_tag, index ),
                     test_eth_rpc_method!(self, transaction_by_block_number_and_index, block_tag, index ),
-                    test_eth_rpc_method!(self, transaction_receipt, tx.hash),
+                    test_eth_rpc_method!(self, transaction_receipt, tx_hash),
                     test_eth_rpc_method!(self, transaction_count, tx.from, Some(block_id)),
                     test_eth_rpc_method!(self, balance, tx.from, Some(block_id)),
-                    test_debug_rpc_method!(self, debug_trace_transaction, tx.hash, tracer_opts)
+                    test_debug_rpc_method!(self, debug_trace_transaction, tx_hash, tracer_opts)
                 ]);
             }
             let block_results = futures::future::join_all(tests).await;
@@ -179,15 +183,15 @@ impl RpcTester {
         &self,
         block_number: u64,
     ) -> Result<(Block, BlockHash, BlockNumberOrTag, BlockId), eyre::Error> {
-        let block: Block = EthApiClient::<Transaction, Block>::block_by_number(
+        let block: Block = EthApiClient::<Transaction, Block, Receipt>::block_by_number(
             &self.truth,
             block_number.into(),
             true,
         )
         .await?
         .expect("should have block from range");
-        assert_eq!(block.header.number.expect("should have number"), block_number);
-        let block_hash = block.header.hash.expect("block range should not include pending");
+        assert_eq!(block.header.number, block_number);
+        let block_hash = block.header.hash;
         let block_tag = BlockNumberOrTag::Number(block_number);
         let block_id = BlockId::Number(block_tag);
         Ok((block, block_hash, block_tag, block_id))

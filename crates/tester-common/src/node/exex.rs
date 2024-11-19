@@ -1,13 +1,17 @@
 use super::{args::TestArgs, ext::TesterStatus};
 use crate::rpc::equality::RpcTester;
 use fake_cl::FakeCl;
+use futures::TryStreamExt;
 use jsonrpsee::http_client::HttpClientBuilder;
 use parking_lot::RwLock;
 use reth::{
-    api::FullNodeComponents,
-    primitives::BlockNumberOrTag,
+    api::{FullNodeComponents, NodeTypesWithEngine},
+    chainspec::EthChainSpec,
     providers::{BlockIdReader, BlockNumReader, StageCheckpointReader},
-    rpc::builder::{auth::AuthServerHandle, RpcServerHandle},
+    rpc::{
+        builder::{auth::AuthServerHandle, RpcServerHandle},
+        types::BlockNumberOrTag,
+    },
 };
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use reth_stages_types::StageId;
@@ -26,17 +30,12 @@ pub async fn exex<Node: FullNodeComponents>(
     let (auth_handle, rpc_handle) = server_receiver.await?;
     let auth_client = auth_handle.http_client();
     let finalized = ctx.provider().finalized_block_num_hash()?.unwrap_or_default();
-    let mut fake_cl = FakeCl::new(ctx.config.chain.chain, etherscan_url)?;
+    let mut fake_cl = FakeCl::new(ctx.config.chain.chain(), etherscan_url)?;
     let initial_height = ctx.provider().last_block_number()?;
 
     let mut local_tip = initial_height;
-    let mut etherscan_tip = fake_cl
-        .etherscan
-        .load_block(BlockNumberOrTag::Latest)
-        .await?
-        .header
-        .number
-        .unwrap_or_default();
+    let mut etherscan_tip =
+        fake_cl.etherscan.load_block(BlockNumberOrTag::Latest).await?.header.number;
 
     rpc_status.write().initial_height = initial_height;
 
@@ -85,9 +84,15 @@ pub async fn exex<Node: FullNodeComponents>(
             info!(etherscan_tip, local_tip, storage_tip, "Advancing chain");
 
             local_tip += 1;
-            fake_cl.advance_chain::<Node::Engine>(&auth_client, local_tip, finalized.hash).await?;
+            fake_cl
+                .advance_chain::<<Node::Types as NodeTypesWithEngine>::Engine>(
+                    &auth_client,
+                    local_tip,
+                    finalized.hash,
+                )
+                .await?;
 
-            if let Some(notification) = ctx.notifications.recv().await {
+            if let Some(notification) = ctx.notifications.try_next().await? {
                 match &notification {
                     ExExNotification::ChainCommitted { new } => {
                         info!(committed_chain = ?new.range(), "Received commit");
@@ -101,7 +106,8 @@ pub async fn exex<Node: FullNodeComponents>(
                 };
 
                 if let Some(committed_chain) = notification.committed_chain() {
-                    ctx.events.send(ExExEvent::FinishedHeight(committed_chain.tip().number))?;
+                    // let b = BlockNumHash::new()
+                    ctx.events.send(ExExEvent::FinishedHeight(committed_chain.tip().num_hash()))?;
                 }
             }
         }
@@ -109,12 +115,6 @@ pub async fn exex<Node: FullNodeComponents>(
         // Avoids hitting rate limits
         tokio::time::sleep(std::time::Duration::from_millis(500)).await;
 
-        etherscan_tip = fake_cl
-            .etherscan
-            .load_block(BlockNumberOrTag::Latest)
-            .await?
-            .header
-            .number
-            .unwrap_or_default()
+        etherscan_tip = fake_cl.etherscan.load_block(BlockNumberOrTag::Latest).await?.header.number
     }
 }

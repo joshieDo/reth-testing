@@ -1,7 +1,8 @@
 #![cfg_attr(not(test), warn(unused_crate_dependencies))]
 use clap::Parser;
-use reth::{builder::EngineNodeLauncher, cli::Cli, providers::providers::BlockchainProvider2};
-use reth_node_optimism::{node::OptimismAddOns, OptimismNode};
+use reth::{builder::EngineNodeLauncher, providers::providers::BlockchainProvider2};
+use reth_optimism_cli::{chainspec::OpChainSpecParser, Cli};
+use reth_optimism_node::{node::OpAddOns, OpNode};
 use tester_common::node::{
     args::TestArgs,
     exex::exex,
@@ -14,12 +15,12 @@ fn main() {
     let rpc_ext = TesterExt::new();
     let rpc_status = rpc_ext.watcher.clone();
 
-    Cli::<TestArgs>::parse()
+    Cli::<OpChainSpecParser, TestArgs>::parse()
         .run(|builder, args| async move {
             let handle = builder
-                .with_types_and_provider::<OptimismNode, BlockchainProvider2<_>>()
-                .with_components(OptimismNode::components(Default::default()))
-                .with_add_ons::<OptimismAddOns>()
+                .with_types_and_provider::<OpNode, BlockchainProvider2<_>>()
+                .with_components(OpNode::components(Default::default()))
+                .with_add_ons(OpAddOns::default())
                 .extend_rpc_modules(move |ctx| {
                     ctx.modules.merge_configured(rpc_ext.into_rpc())?;
                     Ok(())
@@ -35,6 +36,7 @@ fn main() {
                     let launcher = EngineNodeLauncher::new(
                         builder.task_executor().clone(),
                         builder.config().datadir(),
+                        Default::default(),
                     );
                     builder.launch_with(launcher)
                 })

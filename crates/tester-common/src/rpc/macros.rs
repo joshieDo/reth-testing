@@ -4,7 +4,7 @@ macro_rules! test_eth_rpc_method {
         Box::pin($self.test_rpc_call(
             stringify!($method),
             move |client: &HttpClient|  {
-                reth::rpc::api::EthApiClient::<Transaction, Block>::$method(client $(, $args.clone() )*)
+                reth::rpc::api::EthApiClient::<Transaction, Block, Receipt>::$method(client $(, $args.clone() )*)
             }
         )) as Pin<Box<dyn Future<Output = ($crate::rpc::MethodName, Result<(), $crate::rpc::TestError>)> + Send>>
     };

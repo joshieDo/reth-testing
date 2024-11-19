@@ -7,8 +7,9 @@ edition = "2021"
 [dependencies]
 tester-common.workspace = true
 
-reth = { workspace = true, features = ["optimism"] }
-reth-node-optimism = { workspace = true, features = ["optimism"] }
+reth = { workspace = true }
+reth-optimism-node = { workspace = true, features = ["optimism"] }
+reth-optimism-cli = { workspace = true, features = ["optimism"] }
 
 clap.workspace = true
 tokio.workspace = true

@@ -1,10 +1,10 @@
 #![cfg_attr(not(test), warn(unused_crate_dependencies))]
 
 use alloy_chains::Chain;
+use alloy_primitives::BlockHash;
 use jsonrpsee::http_client::{transport::HttpBackend, HttpClient};
 use reth::{
     api::EngineTypes,
-    primitives::BlockHash,
     rpc::{api::EngineApiClient, types::engine::ForkchoiceState},
 };
 use reth_consensus_debug_client::{block_to_execution_payload_v3, EtherscanBlockProvider};

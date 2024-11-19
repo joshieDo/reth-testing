@@ -10,6 +10,7 @@ reth-consensus-debug-client.workspace = true
 reth-rpc-layer.workspace = true
 reth-tracing.workspace = true
 
+alloy-primitives.workspace = true
 alloy-chains.workspace = true
 eyre.workspace = true
 jsonrpsee.workspace = true
