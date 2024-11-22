@@ -1,12 +1,10 @@
 use alloy_rpc_types::{Block, Receipt, SyncStatus, Transaction};
 use clap::Parser;
-use jsonrpsee::{http_client::HttpClientBuilder, tracing::info};
-use std::{ops::RangeInclusive, thread::sleep, time::Duration};
-// use reth_primitives::{Block, Receipt, Transaction};
+use jsonrpsee::http_client::HttpClientBuilder;
 use reth_rpc_api::EthApiClient;
+use reth_tracing::tracing::info;
+use std::{ops::RangeInclusive, thread::sleep, time::Duration};
 use tester_common::rpc::equality::RpcTester;
-
-type BlockNumber = u64;
 
 #[derive(Debug, Parser)]
 #[command(
@@ -23,7 +21,7 @@ pub struct CliArgs {
 
     /// Number of blocks to test from the tip.
     #[arg(long, value_name = "NUM_BLOCKS", default_value = "256")]
-    pub num_blocks: BlockNumber,
+    pub num_blocks: u64,
 }
 
 #[tokio::main]
@@ -43,7 +41,7 @@ pub async fn wait_for_readiness<C>(
     rpc1: &C,
     rpc2: &C,
     block_size_range: u64,
-) -> eyre::Result<RangeInclusive<BlockNumber>>
+) -> eyre::Result<RangeInclusive<u64>>
 where
     C: EthApiClient<Transaction, Block, Receipt> + Clone + Send + Sync,
 {

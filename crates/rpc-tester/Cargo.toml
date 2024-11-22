@@ -7,10 +7,13 @@ license.workspace = true
 exclude.workspace = true
 
 [dependencies]
+tester-common.workspace = true
+
 reth-primitives.workspace = true
 reth-rpc-api.workspace = true
+reth-tracing.workspace = true
+
 alloy-rpc-types.workspace = true
-tester-common.workspace = true
 
 clap.workspace = true
 eyre.workspace = true
