@@ -1,17 +1,13 @@
 use super::{MethodName, TestError};
-use crate::{
-    rpc::report::report, test_debug_rpc_method, test_eth_rpc_method, test_filter_eth_rpc_method,
-    test_reth_rpc_method, test_trace_rpc_method,
-};
+use crate::{rpc, rpc::report::report};
 use alloy_primitives::{BlockHash, BlockNumber};
 use alloy_rpc_types_trace::geth::{
     GethDebugBuiltInTracerType, GethDebugTracerType, GethDebugTracingOptions,
 };
 use eyre::Result;
 use futures::Future;
-use jsonrpsee::http_client::HttpClient;
 use reth::rpc::{
-    api::EthApiClient,
+    api::{DebugApiClient, EthApiClient, EthFilterApiClient, RethApiClient, TraceApiClient},
     types::{
         // trace::geth::{GethDebugBuiltInTracerType, GethDebugTracerType, GethDebugTracingOptions},
         Block,
@@ -20,6 +16,7 @@ use reth::rpc::{
         Filter,
         Index,
         Receipt,
+        SyncStatus,
         Transaction,
     },
 };
@@ -32,28 +29,38 @@ type BlockTestResults = BTreeMap<BlockNumber, Vec<(MethodName, Result<(), TestEr
 
 /// RpcTester
 #[derive(Debug)]
-pub struct RpcTester {
+pub struct RpcTester<C> {
     /// First RPC node.
-    rpc1: HttpClient,
+    pub rpc1: C,
     /// Second RPC node.
-    rpc2: HttpClient,
+    pub rpc2: C,
     /// Source of truth. This may be one of the rpcs above for convenience reasons.
-    truth: HttpClient,
+    truth: C,
     /// Whether to query tracing methods
     use_tracing: bool,
     /// Whether to query reth namespace
     use_reth: bool,
 }
 
-impl RpcTester {
+impl<C> RpcTester<C>
+where
+    C: EthApiClient<Transaction, Block, Receipt>
+        + EthFilterApiClient<Transaction>
+        + RethApiClient
+        + TraceApiClient
+        + DebugApiClient
+        + Clone
+        + Send
+        + Sync,
+{
     /// Returns [`Self`].
-    pub fn new(rpc1: HttpClient, rpc2: HttpClient) -> Self {
+    pub fn new(rpc1: C, rpc2: C) -> Self {
         let truth = rpc2.clone();
         Self { use_tracing: true, use_reth: true, rpc1, rpc2, truth }
     }
 
-    /// Adds [`HttpClient`] as source of truth for blocks and receipts.
-    pub fn with_truth(mut self, truth: HttpClient) -> Self {
+    /// Adds [`C`] as source of truth for blocks and receipts.
+    pub fn with_truth(mut self, truth: C) -> Self {
         self.truth = truth;
         self
     }
@@ -91,20 +98,20 @@ impl RpcTester {
             // Block based
             #[rustfmt::skip]
             tests.extend(vec![
-                test_eth_rpc_method!(self, block_by_hash, block_hash, true),
-                test_eth_rpc_method!(self, block_by_number, block_tag, true),
-                test_eth_rpc_method!(self, block_transaction_count_by_hash, block_hash),
-                test_eth_rpc_method!(self, block_transaction_count_by_number, block_tag),
-                test_eth_rpc_method!(self, block_uncles_count_by_hash, block_hash),
-                test_eth_rpc_method!(self, block_uncles_count_by_number, block_tag),
-                test_eth_rpc_method!(self, block_receipts, block_id),
-                test_eth_rpc_method!(self, header_by_number, block_tag),
-                test_eth_rpc_method!(self, header_by_hash, block_hash),
-                test_reth_rpc_method!(self, reth_get_balance_changes_in_block, block_id),
+                rpc!(self, block_by_hash, block_hash, true),
+                rpc!(self, block_by_number, block_tag, true),
+                rpc!(self, block_transaction_count_by_hash, block_hash),
+                rpc!(self, block_transaction_count_by_number, block_tag),
+                rpc!(self, block_uncles_count_by_hash, block_hash),
+                rpc!(self, block_uncles_count_by_number, block_tag),
+                rpc!(self, block_receipts, block_id),
+                rpc!(self, header_by_number, block_tag),
+                rpc!(self, header_by_hash, block_hash),
+                rpc!(self, reth_get_balance_changes_in_block, block_id),
                 // Response is too big & Http(TooLarge))
                 // test_debug_rpc_method!(self, debug_trace_block_by_number, block_tag, None)
-                test_trace_rpc_method!(self, trace_block, block_id),
-                test_filter_eth_rpc_method!(self, logs, Filter::new().select(block_number)),
+                rpc!(self, trace_block, block_id),
+                rpc!(self, logs, Filter::new().select(block_number)),
             ]);
 
             // // Transaction/Receipt based RPCs
@@ -114,17 +121,11 @@ impl RpcTester {
                 ));
                 let tx_hash = *(tx.inner.tx_hash());
 
-                if let Some(receipt) =
-                    EthApiClient::<Transaction, Block, Receipt>::transaction_receipt(
-                        &self.truth,
-                        tx_hash,
-                    )
-                    .await?
-                {
+                if let Some(receipt) = self.truth.transaction_receipt(tx_hash).await? {
                     if let Some(log) = receipt.logs.first().cloned() {
                         #[rustfmt::skip]
                         tests.push(
-                            test_filter_eth_rpc_method!(self, logs, Filter::new().select(block_number).address(log.address))
+                            rpc!(self, logs, Filter::new().select(block_number).address(log.address))
                         );
                     }
 
@@ -133,7 +134,7 @@ impl RpcTester {
                     {
                         #[rustfmt::skip]
                         tests.push(
-                            test_filter_eth_rpc_method!(self, logs, Filter::new().select(block_number).event_signature(topic))
+                            rpc!(self, logs, Filter::new().select(block_number).event_signature(topic))
                         );
                     }
                 }
@@ -142,16 +143,16 @@ impl RpcTester {
 
                 #[rustfmt::skip]
                 tests.extend(vec![
-                    test_eth_rpc_method!(self, raw_transaction_by_hash, tx_hash),
-                    test_eth_rpc_method!(self, transaction_by_hash, tx_hash),
-                    test_eth_rpc_method!(self, raw_transaction_by_block_hash_and_index, block_hash,index),
-                    test_eth_rpc_method!(self, transaction_by_block_hash_and_index, block_hash, index),
-                    test_eth_rpc_method!(self, raw_transaction_by_block_number_and_index, block_tag, index ),
-                    test_eth_rpc_method!(self, transaction_by_block_number_and_index, block_tag, index ),
-                    test_eth_rpc_method!(self, transaction_receipt, tx_hash),
-                    test_eth_rpc_method!(self, transaction_count, tx.from, Some(block_id)),
-                    test_eth_rpc_method!(self, balance, tx.from, Some(block_id)),
-                    test_debug_rpc_method!(self, debug_trace_transaction, tx_hash, tracer_opts)
+                    rpc!(self, raw_transaction_by_hash, tx_hash),
+                    rpc!(self, transaction_by_hash, tx_hash),
+                    rpc!(self, raw_transaction_by_block_hash_and_index, block_hash,index),
+                    rpc!(self, transaction_by_block_hash_and_index, block_hash, index),
+                    rpc!(self, raw_transaction_by_block_number_and_index, block_tag, index ),
+                    rpc!(self, transaction_by_block_number_and_index, block_tag, index ),
+                    rpc!(self, transaction_receipt, tx_hash),
+                    rpc!(self, transaction_count, tx.from, Some(block_id)),
+                    rpc!(self, balance, tx.from, Some(block_id)),
+                    rpc!(self, debug_trace_transaction, tx_hash, tracer_opts)
                 ]);
             }
             let block_results = futures::future::join_all(tests).await;
@@ -170,7 +171,7 @@ impl RpcTester {
         report(vec![(
             format!("{}..={}", start, end),
             futures::future::join_all([
-                test_filter_eth_rpc_method!(self, logs, Filter::new().from_block(start).to_block(end)
+                rpc!(self, logs, Filter::new().from_block(start).to_block(end)
             )])
             .await,
         )]);
@@ -183,11 +184,9 @@ impl RpcTester {
         &self,
         block_number: u64,
     ) -> Result<(Block, BlockHash, BlockNumberOrTag, BlockId), eyre::Error> {
-        let block: Block = EthApiClient::<Transaction, Block, Receipt>::block_by_number(
-            &self.truth,
-            block_number.into(),
-            true,
-        )
+        let block: Block = self
+            .truth
+            .block_by_number(block_number.into(), true)
         .await?
         .expect("should have block from range");
         assert_eq!(block.header.number, block_number);
@@ -206,7 +205,7 @@ impl RpcTester {
         method_call: F,
     ) -> (MethodName, Result<(), TestError>)
     where
-        F: Fn(&'a HttpClient) -> Fut + 'a,
+        F: Fn(&'a C) -> Fut + 'a,
         Fut: std::future::Future<Output = Result<T, E>> + 'a + Send,
         T: PartialEq + Debug + Serialize,
         E: Debug,
