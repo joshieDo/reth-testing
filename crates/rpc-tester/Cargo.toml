@@ -7,6 +7,9 @@ license.workspace = true
 exclude.workspace = true
 
 [dependencies]
+reth-primitives.workspace = true
+reth-rpc-api.workspace = true
+alloy-rpc-types.workspace = true
 tester-common.workspace = true
 
 clap.workspace = true

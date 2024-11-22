@@ -7161,8 +7161,10 @@ source = "git+https://github.com/paradigmxyz/reth?branch=main#da77ffc9515dd575ba
 dependencies = [
  "alloy-consensus",
  "alloy-eips",
+ "alloy-network",
  "alloy-primitives",
  "alloy-rlp",
+ "alloy-rpc-types",
  "alloy-serde",
  "alloy-trie",
  "bytes",
@@ -7172,6 +7174,7 @@ dependencies = [
  "modular-bitfield",
  "once_cell",
  "op-alloy-consensus",
+ "op-alloy-rpc-types",
  "rayon",
  "reth-codecs",
  "reth-ethereum-forks",
@@ -8123,9 +8126,12 @@ checksum = "afab94fb28594581f62d981211a9a4d53cc8130bbcbbb89a0440d9b8e81a7746"
 name = "rpc-tester"
 version = "1.0.0"
 dependencies = [
+ "alloy-rpc-types",
  "clap",
  "eyre",
  "jsonrpsee",
+ "reth-primitives",
+ "reth-rpc-api",
  "tester-common",
  "tokio",
 ]

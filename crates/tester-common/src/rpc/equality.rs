@@ -16,7 +16,6 @@ use reth::rpc::{
         Filter,
         Index,
         Receipt,
-        SyncStatus,
         Transaction,
     },
 };
@@ -187,8 +186,8 @@ where
         let block: Block = self
             .truth
             .block_by_number(block_number.into(), true)
-        .await?
-        .expect("should have block from range");
+            .await?
+            .expect("should have block from range");
         assert_eq!(block.header.number, block_number);
         let block_hash = block.header.hash;
         let block_tag = BlockNumberOrTag::Number(block_number);

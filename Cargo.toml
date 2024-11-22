@@ -33,13 +33,15 @@ reth-engine-tree = { git = "https://github.com/paradigmxyz/reth", branch = "main
 reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
 reth-optimism-cli = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
 reth-optimism-node = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
+reth-primitives = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
+reth-rpc-api = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
 reth-rpc-layer = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
 reth-stages-types = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
-reth-rpc-types = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
 reth-tracing = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
 
 alloy-primitives = "0.8.11"
 alloy-chains = "0.1.32"
+alloy-rpc-types = "0.6.4"
 alloy-rpc-types-trace = "0.6.4"
 op-alloy-consensus = "0.6.4"
 
