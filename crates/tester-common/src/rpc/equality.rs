@@ -157,8 +157,7 @@ where
             let block_results = futures::future::join_all(tests).await;
             results.insert(block_number, block_results);
         }
-        report(results.into_iter().map(|(k, v)| (format!("Block Number {k}"), v)).collect());
-        Ok(())
+        report(results.into_iter().map(|(k, v)| (format!("Block Number {k}"), v)).collect())
     }
 
     /// Verifies RPC calls applicable to block ranges.
@@ -173,7 +172,7 @@ where
                 rpc!(self, logs, Filter::new().from_block(start).to_block(end)
             )])
             .await,
-        )]);
+        )])?;
 
         Ok(())
     }

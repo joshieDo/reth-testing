@@ -3,7 +3,10 @@ use console::Style;
 use similar::{ChangeTag, TextDiff};
 
 /// Prints test results to console presenting a coloured diff.
-pub(crate) fn report(results_by_block: ReportResults) {
+/// 
+/// Returns false if it has found any failure.
+pub(crate) fn report(results_by_block: ReportResults) -> eyre::Result<()> {
+    let mut passed = true;
     println!("\n--- RPC Method Test Results ---");
 
     for (title, results) in results_by_block {
@@ -15,6 +18,7 @@ pub(crate) fn report(results_by_block: ReportResults) {
         if failures.is_empty() {
             println!("{title} ✅");
         } else {
+            passed = false;
             println!("\n{title} ❌");
             for (name, err) in failures {
                 println!("    {name}: ❌ Failure ");
@@ -40,4 +44,8 @@ pub(crate) fn report(results_by_block: ReportResults) {
     }
 
     println!("--------------------------------\n");
+    if passed {
+        return Ok(())
+    }
+    Err(eyre::eyre!("Failed."))
 }
