@@ -26,18 +26,18 @@ reth-op-tester = { path = "crates/reth-op-tester" }
 rpc-tester = { path = "crates/rpc-tester" }
 tester-common = { path = "crates/tester-common" }
 
-reth = { git = "https://github.com/paradigmxyz/reth", branch = "main"}
-reth-consensus-debug-client = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
-reth-exex = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
-reth-engine-tree = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
-reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
-reth-optimism-cli = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
-reth-optimism-node = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
-reth-primitives = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
-reth-rpc-api = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
-reth-rpc-layer = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
-reth-stages-types = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
-reth-tracing = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
+reth = { git = "https://github.com/paradigmxyz/reth", rev = "da77ffc" }
+reth-consensus-debug-client = { git = "https://github.com/paradigmxyz/reth", rev = "da77ffc"  }
+reth-exex = { git = "https://github.com/paradigmxyz/reth", rev = "da77ffc"  }
+reth-engine-tree = { git = "https://github.com/paradigmxyz/reth", rev = "da77ffc"  }
+reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", rev = "da77ffc"  }
+reth-optimism-cli = { git = "https://github.com/paradigmxyz/reth", rev = "da77ffc"  }
+reth-optimism-node = { git = "https://github.com/paradigmxyz/reth", rev = "da77ffc"  }
+reth-primitives = { git = "https://github.com/paradigmxyz/reth", rev = "da77ffc"  }
+reth-rpc-api = { git = "https://github.com/paradigmxyz/reth", rev = "da77ffc"  }
+reth-rpc-layer = { git = "https://github.com/paradigmxyz/reth", rev = "da77ffc"  }
+reth-stages-types = { git = "https://github.com/paradigmxyz/reth", rev = "da77ffc"  }
+reth-tracing = { git = "https://github.com/paradigmxyz/reth", rev = "da77ffc"  }
 
 alloy-primitives = "0.8.11"
 alloy-chains = "0.1.32"
