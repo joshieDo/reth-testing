@@ -2,7 +2,7 @@ use alloy_rpc_types::{Block, Receipt, SyncStatus, Transaction};
 use clap::Parser;
 use jsonrpsee::http_client::HttpClientBuilder;
 use reth_rpc_api::EthApiClient;
-use reth_tracing::tracing::info;
+use reth_tracing::{tracing::info, LayerInfo, RethTracer, Tracer};
 use std::{ops::RangeInclusive, thread::sleep, time::Duration};
 use tester_common::rpc::equality::RpcTester;
 
@@ -20,12 +20,27 @@ pub struct CliArgs {
     pub rpc2: String,
 
     /// Number of blocks to test from the tip.
-    #[arg(long, value_name = "NUM_BLOCKS", default_value = "256")]
+    #[arg(long, value_name = "NUM_BLOCKS", default_value = "32")]
     pub num_blocks: u64,
+
+    /// Whether to query reth namespace
+    #[arg(long, value_name = "RETH", default_value = "false")]
+    pub use_reth: bool,
+
+    /// Whether to query tracing methods
+    #[arg(long, value_name = "TRACING", default_value = "false")]
+    pub use_tracing: bool,
+
+    /// Whether to call rpc transaction methods for every transacion. Otherwise, just the first of
+    /// the block.
+    #[arg(long, value_name = "ALL_TXES", default_value = "false")]
+    pub use_all_txes: bool,
 }
 
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
+    RethTracer::new().init()?;
+
     let args = CliArgs::parse();
 
     let rpc1 = HttpClientBuilder::default().build(&args.rpc1)?;
@@ -33,7 +48,12 @@ async fn main() -> eyre::Result<()> {
 
     let block_range = wait_for_readiness(&rpc1, &rpc2, args.num_blocks).await?;
 
-    RpcTester::new(rpc1, rpc2).test_equality(block_range).await
+    RpcTester::new(rpc1, rpc2)
+        .with_tracing(args.use_tracing)
+        .with_reth(args.use_reth)
+        .with_all_txes(args.use_all_txes)
+        .test_equality(block_range)
+        .await
 }
 
 /// Waits until rpc1 is synced to the tip and returns a valid block range to test against rpc2.
@@ -59,7 +79,9 @@ where
         let tip2: u64 = rpc2.block_number().await?.try_into()?;
 
         if tip1 >= tip2 || tip2 - tip1 <= 5 {
-            return Ok(tip2 - block_size_range..=tip2)
+            let range = tip2 - block_size_range..=tip2;
+            info!("testing block range: {range:?}");
+            return Ok(range)
         }
 
         sleep();

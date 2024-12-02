@@ -6,6 +6,7 @@ use alloy_rpc_types_trace::geth::{
 };
 use eyre::Result;
 use futures::Future;
+use jsonrpsee::tracing::debug;
 use reth::rpc::{
     api::{DebugApiClient, EthApiClient, EthFilterApiClient, RethApiClient, TraceApiClient},
     types::{
@@ -39,6 +40,9 @@ pub struct RpcTester<C> {
     use_tracing: bool,
     /// Whether to query reth namespace
     use_reth: bool,
+    /// Whether to call rpc transaction methods for every transacion. Otherwise, just the first of
+    /// the block.
+    use_all_txes: bool,
 }
 
 impl<C> RpcTester<C>
@@ -55,7 +59,7 @@ where
     /// Returns [`Self`].
     pub fn new(rpc1: C, rpc2: C) -> Self {
         let truth = rpc2.clone();
-        Self { use_tracing: true, use_reth: true, rpc1, rpc2, truth }
+        Self { use_tracing: false, use_reth: false, use_all_txes: false, rpc1, rpc2, truth }
     }
 
     /// Adds [`C`] as source of truth for blocks and receipts.
@@ -65,14 +69,20 @@ where
     }
 
     /// Disables tracing calls.
-    pub fn without_tracing(mut self) -> Self {
-        self.use_tracing = true;
+    pub fn with_tracing(mut self, is_enabled: bool) -> Self {
+        self.use_tracing = is_enabled;
         self
     }
 
     /// Disables reth namespace.
-    pub fn without_reth(mut self) -> Self {
-        self.use_reth = true;
+    pub fn with_reth(mut self, is_enabled: bool) -> Self {
+        self.use_reth = is_enabled;
+        self
+    }
+
+    /// Disables querying all transactions. Will only query the first of the block.
+    pub fn with_all_txes(mut self, is_enabled: bool) -> Self {
+        self.use_all_txes = is_enabled;
         self
     }
 
@@ -153,6 +163,10 @@ where
                     rpc!(self, balance, tx.from, Some(block_id)),
                     rpc!(self, debug_trace_transaction, tx_hash, tracer_opts)
                 ]);
+
+                if !self.use_all_txes {
+                    break
+                }
             }
             let block_results = futures::future::join_all(tests).await;
             results.insert(block_number, block_results);
@@ -208,15 +222,16 @@ where
         T: PartialEq + Debug + Serialize,
         E: Debug,
     {
-        trace!("## {name}");
-
         if name.starts_with("reth") && !self.use_reth || name.contains("trace") && !self.use_tracing
         {
             return (name.to_string(), Ok(()))
         }
 
+        trace!("## {name}");
+        let t = std::time::Instant::now();
         let (local_result, remote_result) =
             tokio::join!(method_call(&self.rpc1), method_call(&self.rpc2));
+        debug!("## {name} {}", t.elapsed().as_millis());
 
         let result = match (local_result, remote_result) {
             (Ok(local), Ok(remote)) => {

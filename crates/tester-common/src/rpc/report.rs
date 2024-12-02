@@ -3,7 +3,7 @@ use console::Style;
 use similar::{ChangeTag, TextDiff};
 
 /// Prints test results to console presenting a coloured diff.
-/// 
+///
 /// Returns false if it has found any failure.
 pub(crate) fn report(results_by_block: ReportResults) -> eyre::Result<()> {
     let mut passed = true;
