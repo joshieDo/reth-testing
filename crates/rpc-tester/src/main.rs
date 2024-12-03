@@ -2,7 +2,7 @@ use alloy_rpc_types::{Block, Receipt, SyncStatus, Transaction};
 use clap::Parser;
 use jsonrpsee::http_client::HttpClientBuilder;
 use reth_rpc_api::EthApiClient;
-use reth_tracing::{tracing::info, LayerInfo, RethTracer, Tracer};
+use reth_tracing::{tracing::info, RethTracer, Tracer};
 use std::{ops::RangeInclusive, thread::sleep, time::Duration};
 use tester_common::rpc::equality::RpcTester;
 

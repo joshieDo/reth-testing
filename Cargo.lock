@@ -966,6 +966,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "155a5a185e42c6b77ac7b88a15143d930a9e9727a5b7b77eed417404ab15c247"
 
 [[package]]
+name = "assert-json-diff"
+version = "2.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47e4f2b81832e72834d7518d8487a0396a28cc408186a2e8854c0f98011faf12"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "async-compression"
 version = "0.4.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1705,7 +1715,6 @@ dependencies = [
  "encode_unicode",
  "lazy_static",
  "libc",
- "unicode-width 0.1.14",
  "windows-sys 0.52.0",
 ]
 
@@ -8973,8 +8982,8 @@ version = "0.0.0"
 dependencies = [
  "alloy-primitives",
  "alloy-rpc-types-trace",
+ "assert-json-diff",
  "clap",
- "console",
  "eyre",
  "fake-cl",
  "futures",
@@ -8987,7 +8996,6 @@ dependencies = [
  "reth-tracing",
  "serde",
  "serde_json",
- "similar",
  "tokio",
 ]
 

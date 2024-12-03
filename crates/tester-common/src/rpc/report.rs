@@ -1,6 +1,6 @@
 use super::{ReportResults, TestError};
-use console::Style;
-use similar::{ChangeTag, TextDiff};
+use assert_json_diff::assert_json_include;
+use serde_json::Value;
 
 /// Prints test results to console presenting a coloured diff.
 ///
@@ -10,42 +10,62 @@ pub(crate) fn report(results_by_block: ReportResults) -> eyre::Result<()> {
     println!("\n--- RPC Method Test Results ---");
 
     for (title, results) in results_by_block {
-        let failures: Vec<_> = results
-            .into_iter()
-            .filter_map(|(name, result)| result.err().map(|err| (name, err)))
-            .collect();
+        let mut passed_title = true;
 
-        if failures.is_empty() {
-            println!("{title} ✅");
-        } else {
-            passed = false;
-            println!("\n{title} ❌");
-            for (name, err) in failures {
-                println!("    {name}: ❌ Failure ");
-                match err {
-                    TestError::Diff { local, remote } => {
-                        let diff = TextDiff::from_lines(&local, &remote);
-                        for op in diff.ops() {
-                            for change in diff.iter_changes(op).peekable() {
-                                let (sign, style) = match change.tag() {
-                                    ChangeTag::Delete => ("-", Style::new().red()),
-                                    ChangeTag::Insert => ("+", Style::new().green()),
-                                    ChangeTag::Equal => (" ", Style::new()),
-                                };
-                                print!("{}{}", style.apply_to(sign).bold(), style.apply_to(change));
-                            }
+        for (name, result) in results {
+            match result {
+                Ok(_) => continue,
+                Err(TestError::Diff { rpc1, rpc2 }) => {
+                    if let Some(diffs) = find_diffs(rpc1, rpc2) {
+                        if passed_title {
+                            passed_title = false;
+                            println!("\n{title} ❌");
                         }
+                        println!("    {name}: ❌ Failure ");
+                        println!("{diffs}");
                     }
-                    TestError::LocalErr(err) => println!("## Local node error: {err}"),
-                    TestError::RemoteErr(err) => println!("## Remote node error: {err}"),
+                }
+                Err(TestError::Rpc1Err(err)) | Err(TestError::Rpc2Err(err)) => {
+                    passed_title = false;
+                    println!("\n{title} ❌\n{err}");
                 }
             }
         }
+
+        if passed_title {
+            println!("{title} ✅");
+        }
+        passed &= passed_title;
     }
 
     println!("--------------------------------\n");
     if passed {
-        return Ok(())
+        Ok(())
+    } else {
+        Err(eyre::eyre!("Failed."))
     }
-    Err(eyre::eyre!("Failed."))
+}
+
+fn find_diffs(rpc1: Value, rpc2: Value) -> Option<String> {
+    let default_panic_hook = std::panic::take_hook();
+
+    // Suppress the panic stderr output
+    std::panic::set_hook(Box::new(|_| {}));
+
+    let diff = std::panic::catch_unwind(|| {
+        assert_json_include!(actual: rpc1, expected: rpc2);
+    });
+
+    // Restore the default hook
+    std::panic::set_hook(default_panic_hook);
+
+    if let Err(err) = diff {
+        let err_msg = err
+            .downcast_ref::<&str>()
+            .map(|s| s.to_string())
+            .unwrap_or_else(|| err.downcast_ref::<String>().cloned().expect("should"))
+            .replace("actual", "rpc1");
+        return Some(err_msg)
+    }
+    None
 }

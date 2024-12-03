@@ -45,6 +45,7 @@ alloy-rpc-types = "0.6.4"
 alloy-rpc-types-trace = "0.6.4"
 op-alloy-consensus = "0.6.4"
 
+assert-json-diff = "2.0.2"
 console = "0.15.0"
 clap = "4"
 eyre = "0.6"
@@ -53,7 +54,6 @@ jsonrpsee = { version = "0.24", features = ["server", "macros"] }
 parking_lot = "0.12"
 serde = { version = "1.0", default-features = false }
 serde_json = "1.0.94"
-similar = "2.6.0"
 tokio = { version = "1.39", default-features = false }
 
 [profile.maxperf]

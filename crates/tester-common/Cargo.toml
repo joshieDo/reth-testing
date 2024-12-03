@@ -15,13 +15,12 @@ fake-cl.workspace = true
 alloy-primitives.workspace = true
 alloy-rpc-types-trace.workspace = true
 
+assert-json-diff.workspace = true
 clap.workspace = true
-console.workspace = true
 eyre.workspace = true
 futures.workspace = true
 jsonrpsee.workspace = true
 parking_lot.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-similar.workspace = true
 tokio.workspace = true
