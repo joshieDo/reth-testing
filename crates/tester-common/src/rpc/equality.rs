@@ -98,7 +98,7 @@ where
         let mut results = BlockTestResults::new();
 
         for block_number in block_range {
-            info!("# test rpc {block_number}");
+            info!(block_number, "testing rpc");
 
             let mut tests = vec![];
 
@@ -231,7 +231,7 @@ where
         let t = std::time::Instant::now();
         let (rpc1_result, rpc2_result) =
             tokio::join!(method_call(&self.rpc1), method_call(&self.rpc2));
-        debug!("## {name} {}", t.elapsed().as_millis());
+        debug!(elapsed = t.elapsed().as_millis(), ?rpc1_result, ?rpc2_result, "{name}");
 
         let result = match (rpc1_result, rpc2_result) {
             (Ok(rpc1), Ok(rpc2)) => {
@@ -244,8 +244,8 @@ where
                     })
                 }
             }
-            (Err(e), _) => Err(TestError::Rpc1Err(format!("{e:?}"))),
-            (Ok(_), Err(e)) => Err(TestError::Rpc2Err(format!("{e:?}"))),
+            (Err(e), _) => Err(TestError::Rpc1Err(format!("rpc1: {e:?}"))),
+            (Ok(_), Err(e)) => Err(TestError::Rpc2Err(format!("rpc2: {e:?}"))),
         };
 
         (name.to_string(), result)

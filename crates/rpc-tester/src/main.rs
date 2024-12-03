@@ -69,7 +69,7 @@ where
 
     // Waits until it's done syncing
     while let SyncStatus::Info(sync_info) = rpc1.syncing().await? {
-        info!("rpc1 still syncing: {sync_info:?}");
+        info!(?sync_info, "rpc1 still syncing");
         sleep();
     }
 
@@ -80,7 +80,7 @@ where
 
         if tip1 >= tip2 || tip2 - tip1 <= 5 {
             let range = tip2 - block_size_range..=tip2;
-            info!("testing block range: {range:?}");
+            info!(?range, "testing block range");
             return Ok(range)
         }
 
