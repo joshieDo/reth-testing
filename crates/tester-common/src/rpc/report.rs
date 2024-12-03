@@ -2,9 +2,9 @@ use super::{ReportResults, TestError};
 use assert_json_diff::assert_json_include;
 use serde_json::Value;
 
-/// Prints test results to console presenting a coloured diff.
+/// Prints test results to console.
 ///
-/// Returns false if it has found any failure.
+/// Returns error if RPC1 is missing/mismatching any element against RPC2 on any rpc method.
 pub(crate) fn report(results_by_block: ReportResults) -> eyre::Result<()> {
     let mut passed = true;
     println!("\n--- RPC Method Test Results ---");
@@ -16,7 +16,9 @@ pub(crate) fn report(results_by_block: ReportResults) -> eyre::Result<()> {
             match result {
                 Ok(_) => continue,
                 Err(TestError::Diff { rpc1, rpc2 }) => {
-                    if let Some(diffs) = find_diffs(rpc1, rpc2) {
+                    // While results are different, we only report it as error if __RPC1__ is
+                    // missing/mismatching any element against RPC2.
+                    if let Some(diffs) = verify_missing_or_mismatch(rpc1, rpc2) {
                         if passed_title {
                             passed_title = false;
                             println!("\n{title} ❌");
@@ -46,7 +48,8 @@ pub(crate) fn report(results_by_block: ReportResults) -> eyre::Result<()> {
     }
 }
 
-fn find_diffs(rpc1: Value, rpc2: Value) -> Option<String> {
+/// Verifies if there is any missing field/element from rpc1 comparing it to rpc2.
+fn verify_missing_or_mismatch(rpc1: Value, rpc2: Value) -> Option<String> {
     let default_panic_hook = std::panic::take_hook();
 
     // Suppress the panic stderr output
